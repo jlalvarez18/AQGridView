@@ -45,7 +45,7 @@
 #endif
 
 @interface AQGridViewCell ()
-@property (nonatomic, retain) UIView * contentView;
+@property (nonatomic, strong) UIView * contentView;
 @property (nonatomic, copy) NSString * reuseIdentifier;
 - (void) flipHighlightTimerFired: (NSTimer *) timer;
 @end
@@ -71,7 +71,7 @@
 	else
 		_cellFlags.selectionStyle = AQGridViewCellSelectionStyleGray;
     _cellFlags.setShadowPath = 0;
-	_selectionColorInfo = CFDictionaryCreateMutable( kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,  &kCFTypeDictionaryValueCallBacks );
+	_selectionColorInfo = [NSMutableDictionary dictionary];
 	self.backgroundColor = [UIColor whiteColor];
 	
 	_selectionGlowShadowRadius = 12.0f;
@@ -88,29 +88,12 @@
 		_cellFlags.selectionStyle = AQGridViewCellSelectionStyleGlow;
 	else
 		_cellFlags.selectionStyle = AQGridViewCellSelectionStyleGray;
-	_selectionColorInfo = CFDictionaryCreateMutable( kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks,  &kCFTypeDictionaryValueCallBacks );
+	_selectionColorInfo = [NSMutableDictionary dictionary];
 	self.backgroundColor = [UIColor whiteColor];
     
     [super awakeFromNib];
 }
 
-- (void) dealloc
-{
-	[_reuseIdentifier release];
-	[_contentView release];
-	[_backgroundView release];
-	[_selectedBackgroundView release];
-	[_selectedOverlayView release];
-	[_backgroundColor release];
-	[_separatorColor release];
-	[_selectionGlowColor release];
-	[_bottomSeparatorView release];
-	[_rightSeparatorView release];
-	if ( _selectionColorInfo != NULL )
-		CFRelease( _selectionColorInfo );
-	[_fadeTimer release];
-	[super dealloc];
-}
 
 - (NSComparisonResult) compareOriginAgainstCell: (AQGridViewCell *) otherCell
 {
@@ -208,11 +191,11 @@
 	{
 		if ( view.opaque )
 		{
-			NSMutableDictionary * info = (NSMutableDictionary *) CFDictionaryGetValue( _selectionColorInfo, view );
+			NSMutableDictionary * info = [_selectionColorInfo objectForKey: view];
 			if ( info == nil )
 			{
 				info = [NSMutableDictionary dictionaryWithCapacity: 2];
-				CFDictionarySetValue( _selectionColorInfo, view, info );
+				[_selectionColorInfo setObject: info forKey: view];
 			}
 			
 			id value = view.backgroundColor;
@@ -232,7 +215,7 @@
 {
 	for ( UIView * view in aView.subviews )
 	{
-		NSMutableDictionary * info = (NSMutableDictionary *) CFDictionaryGetValue( _selectionColorInfo, view );
+		NSMutableDictionary * info = [_selectionColorInfo objectForKey: view];
 		if ( info != nil )
 		{
 			id value = [info objectForKey: @"backgroundColor"];
@@ -257,11 +240,11 @@
 	{
 		if ( [view respondsToSelector: @selector(setHighlighted:)] )
 		{
-			NSMutableDictionary * info = (NSMutableDictionary *) CFDictionaryGetValue( _selectionColorInfo, view );
+			NSMutableDictionary * info = [_selectionColorInfo objectForKey: view];
 			if ( info == nil )
 			{
 				info = [NSMutableDictionary dictionaryWithCapacity: 2];
-				CFDictionarySetValue( _selectionColorInfo, view, info );
+				[_selectionColorInfo setObject: info forKey: view];
 			}
 			
 			// don't overwrite any prior cache of a view's original highlighted state.
@@ -287,7 +270,7 @@
 	for ( UIView * view in aView.subviews )
 	{
 		if ([view respondsToSelector:@selector(setHighlighted:)]) {
-			NSMutableDictionary * info = (NSMutableDictionary *) CFDictionaryGetValue( _selectionColorInfo, view );
+			NSMutableDictionary * info = [_selectionColorInfo objectForKey: view];
 			if ( info != nil )
 			{
 				id value = [info objectForKey: @"highlighted"];
@@ -394,7 +377,6 @@
 		if ( _fadeTimer != nil )
 		{
 			[_fadeTimer invalidate];
-			[_fadeTimer release];
 		}
 		
 		_fadeTimer = [[NSTimer alloc] initWithFireDate: [NSDate dateWithTimeIntervalSinceNow: 0.1]
@@ -439,7 +421,7 @@
 		
 		_cellFlags.highlighted = 0;
 		[_selectedBackgroundView removeFromSuperview];
-		CFDictionaryRemoveAllValues( _selectionColorInfo );
+		[_selectionColorInfo removeAllObjects];
 	}
 	
 	_cellFlags.animatingSelection = 0;
@@ -529,8 +511,7 @@
 	if ( _backgroundView.superview == self )
 		[_backgroundView removeFromSuperview];
 	
-	[_backgroundView release];
-	_backgroundView = [aView retain];
+	_backgroundView = aView;
 	
 	_backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
 	
@@ -572,7 +553,6 @@
 		else if ( _bottomSeparatorView != nil )
 		{
 			[_bottomSeparatorView removeFromSuperview];
-			[_bottomSeparatorView release];
 			_bottomSeparatorView = nil;
 		}
 		
@@ -592,7 +572,6 @@
 		else if ( _rightSeparatorView != nil )
 		{
 			[_rightSeparatorView removeFromSuperview];
-			[_rightSeparatorView release];
 			_rightSeparatorView = nil;
 		}
 	}
@@ -604,8 +583,6 @@
 
 - (void) setSelectionGlowColor: (UIColor *) aColor
 {
-	[aColor retain];
-	[_selectionGlowColor release];
 	_selectionGlowColor = aColor;
 	
 	_cellFlags.selectionGlowColorSet = (aColor == nil ? 0 : 1);
@@ -619,8 +596,7 @@
 	if ( _selectedBackgroundView.superview == self )
 		[_selectedBackgroundView removeFromSuperview];
 	
-	[_selectedBackgroundView release];
-	_selectedBackgroundView = [aView retain];
+	_selectedBackgroundView = aView;
 	
 	_selectedBackgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth|UIViewAutoresizingFlexibleHeight;
 	
@@ -665,7 +641,7 @@
 
 - (UIColor *) separatorColor
 {
-	return ( [[_separatorColor retain] autorelease] );
+	return ( _separatorColor );
 }
 
 - (void) setSeparatorColor: (UIColor *) color
@@ -673,8 +649,7 @@
 	if ( _separatorColor == color )
 		return;
 	
-	[_separatorColor release];
-	_separatorColor = [color retain];
+	_separatorColor = color;
 	
 	_bottomSeparatorView.backgroundColor = _separatorColor;
 	_rightSeparatorView.backgroundColor = _separatorColor;

@@ -97,7 +97,7 @@ extern NSString * const AQGridViewSelectionDidChangeNotification;
 
 @interface AQGridView : UIScrollView
 {
-	id<AQGridViewDataSource>		_dataSource;
+	id<AQGridViewDataSource>		__unsafe_unretained _dataSource;
 
 	AQGridViewData *				_gridData;
 	NSMutableArray *				_updateInfoStack;
@@ -168,8 +168,8 @@ extern NSString * const AQGridViewSelectionDidChangeNotification;
 	} _flags;
 }
 
-@property (nonatomic, assign) IBOutlet id<AQGridViewDataSource> dataSource;
-@property (nonatomic, assign) IBOutlet id<AQGridViewDelegate> delegate;
+@property (nonatomic, unsafe_unretained) IBOutlet id<AQGridViewDataSource> dataSource;
+@property (nonatomic, unsafe_unretained) IBOutlet id<AQGridViewDelegate> delegate;
 
 @property (nonatomic, assign) AQGridViewLayoutDirection layoutDirection;
 
@@ -227,20 +227,20 @@ extern NSString * const AQGridViewSelectionDidChangeNotification;
 //  this property is set to YES, or to vertical otherwise.
 @property (nonatomic, assign) BOOL clipsContentWidthToBounds __attribute__((deprecated));	// default is YES. If you want to enable horizontal scrolling, set this to NO.
 
-@property (nonatomic, retain) UIView * backgroundView;		// specifies a view to place behind the cells
+@property (nonatomic, strong) UIView * backgroundView;		// specifies a view to place behind the cells
 @property (nonatomic) BOOL backgroundViewExtendsUp;			// default is NO. If YES, the background view extends upward and is visible during a bounce.
 @property (nonatomic) BOOL backgroundViewExtendsDown;		// default is NO. If YES, the background view extends downward and is visible during a bounce.
 @property (nonatomic) BOOL usesPagedHorizontalScrolling;	// default is NO, and scrolls verticalls only. Set to YES to have horizontal-only scrolling by page.
 
 @property (nonatomic) AQGridViewCellSeparatorStyle separatorStyle;	// default is AQGridViewCellSeparatorStyleEmptySpace
-@property (nonatomic, retain) UIColor * separatorColor;		// ignored unless separatorStyle == AQGridViewCellSeparatorStyleSingleLine. Default is standard separator gray.
+@property (nonatomic, strong) UIColor * separatorColor;		// ignored unless separatorStyle == AQGridViewCellSeparatorStyleSingleLine. Default is standard separator gray.
 
 - (AQGridViewCell *) dequeueReusableCellWithIdentifier: (NSString *) reuseIdentifier;
 
 // Headers and Footers
 
-@property (nonatomic, retain) UIView * gridHeaderView;
-@property (nonatomic, retain) UIView * gridFooterView;
+@property (nonatomic, strong) UIView * gridHeaderView;
+@property (nonatomic, strong) UIView * gridFooterView;
 
 @property (nonatomic, assign) CGFloat leftContentInset;
 @property (nonatomic, assign) CGFloat rightContentInset;
